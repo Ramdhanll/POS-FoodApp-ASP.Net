@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "k8gV55O7OyLqptNNUs5bUIfHLKfqxoEpAjH7C5f+yARNrQjFLGiInpGw75vnV+yMvx9vySJGuE4/SkAyg0Xmqw==",
+  "success": true,
+  "projectFilePath": "C:\\Ramadhani\\Development\\Website\\FoodShop\\FoodShop\\Shared\\FoodShop.Shared.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\erdev\\.nuget\\packages\\microsoft.aspnetcore.http.features\\5.0.17\\microsoft.aspnetcore.http.features.5.0.17.nupkg.sha512",
+    "C:\\Users\\erdev\\.nuget\\packages\\microsoft.extensions.primitives\\5.0.1\\microsoft.extensions.primitives.5.0.1.nupkg.sha512",
+    "C:\\Users\\erdev\\.nuget\\packages\\system.io.pipelines\\5.0.2\\system.io.pipelines.5.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}

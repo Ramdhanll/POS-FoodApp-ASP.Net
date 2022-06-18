@@ -1,0 +1,18 @@
+.gradient-custom-2[b-5naqouqtfq] {
+    /* fallback for old browsers */
+    background: rgb(226,11,11);
+    background: linear-gradient(90deg, rgba(226,11,11,1) 0%, rgba(236,102,62,1) 35%, rgba(255,157,0,1) 100%);
+}
+
+@media (min-width: 768px) {
+    .gradient-form[b-5naqouqtfq] {
+        height: 100vh !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .gradient-custom-2[b-5naqouqtfq] {
+        border-top-right-radius: .3rem;
+        border-bottom-right-radius: .3rem;
+    }
+}

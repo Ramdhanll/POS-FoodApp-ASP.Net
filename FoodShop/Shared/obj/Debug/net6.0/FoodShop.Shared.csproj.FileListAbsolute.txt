@@ -1,0 +1,12 @@
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\bin\Debug\net6.0\FoodShop.Shared.deps.json
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\bin\Debug\net6.0\FoodShop.Shared.dll
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\bin\Debug\net6.0\FoodShop.Shared.pdb
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\obj\Debug\net6.0\FoodShop.Shared.csproj.AssemblyReference.cache
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\obj\Debug\net6.0\FoodShop.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\obj\Debug\net6.0\FoodShop.Shared.AssemblyInfoInputs.cache
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\obj\Debug\net6.0\FoodShop.Shared.AssemblyInfo.cs
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\obj\Debug\net6.0\FoodShop.Shared.csproj.CoreCompileInputs.cache
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\obj\Debug\net6.0\FoodShop.Shared.dll
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\obj\Debug\net6.0\refint\FoodShop.Shared.dll
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\obj\Debug\net6.0\FoodShop.Shared.pdb
+C:\Ramadhani\Development\Website\FoodShop\FoodShop\Shared\obj\Debug\net6.0\ref\FoodShop.Shared.dll

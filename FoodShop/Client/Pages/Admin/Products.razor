@@ -1,0 +1,251 @@
+﻿@layout MainLayout
+@page "/admin/products"
+@using System.Net.Http.Headers
+@using System.IO;
+@using FoodShop.Client.Shared.Components
+@using FoodShop.Client.Shared.Product
+@using FoodShop.Client.ViewModel
+@using Tewr.Blazor.FileReader;
+
+@inject IJSRuntime jsRuntime
+@inject IFileReaderService fileReader;
+@inject IProductService ProductService
+@inject ICategoryService CategoryService
+@inject HttpClient Http
+@inject IModalService Modal
+@inject FileService fileService;
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="d-flex justify-content-between">
+    <h3>Product</h3>
+    <MudButton OnClick="CreateProduct" Variant="Variant.Filled" Color="Color.Primary">Create Product</MudButton>
+</div>
+
+<div style="padding-bottom: 50px"></div>
+
+<div class="d-flex gap-2 justify-content-start">
+    <button @onclick="ExportExcel" class="btn btn-outline-info">Export Excel</button>
+    <button @onclick="ExportCSV" class="btn btn-outline-info">Download CSV</button>
+</div>
+
+<div style="padding-bottom: 30px"></div>
+
+<MudDataGrid T="Product" MultiSelection="true" Items="@products" Sortable="true" Filterable="true"
+             QuickFilter="@_quickFilter" Hideable="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Product</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <Columns>
+        <Column T="Product" Field="Image" Filterable="false" Sortable="false">
+            <CellTemplate>
+                <img src=@($"{Http.BaseAddress}{context.Item.Image}") width="80px" />
+            </CellTemplate>
+        </Column>
+        <Column T="Product" Field="Name" SortBy="@_sortBy" />
+        <Column T="Product" Field="Description" />
+        <Column T="Product" Field="Price" />
+        <Column T="Product" Field="Categories" Sortable="false" Filterable="false">
+            <CellTemplate>
+                <div class="d-flex gap-2 justify-content-start">
+                    @foreach (var item in context.Item.Categories)
+                    {
+                        <MudChip Color="@generateColorChip(item.Name)">@item.Name</MudChip>
+                    }
+                </div>
+            </CellTemplate>
+        </Column>
+        <Column T="Product" Title="Action" Field="Id">
+            <CellTemplate>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="@(() => UpdateProduct(context.Item))" Variant="Variant.Filled" Color="Color.Warning" Class="me-2"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick="@(() => DeleteProduct(context.Item.Id))" Variant="Variant.Filled" Color="Color.Error"></MudIconButton>
+            </CellTemplate>
+        </Column>
+
+    </Columns>
+
+    <PagerContent>
+        <MudDataGridPager T="Product" PageSizeOptions="@pageSize" />
+    </PagerContent>
+
+</MudDataGrid>
+
+
+<div style="padding-bottom: 50px"></div>
+
+@code {
+    int no = 1;
+    private List<Category> categories = new List<Category>();
+    private List<Product> products = new List<Product>();
+    ProductCreateVMC product = new ProductCreateVMC();
+    int[] pageSize = { 5, 10, 25, 50, 100 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await CategoryService.GetCategoriesAsync();
+        categories = result.Data;
+
+        var products = await ProductService.GetProductsAsync();
+        this.products = products.Data;
+
+    }
+
+    private async Task loadDataProductAsync() {
+        var products = await ProductService.GetProductsAsync();
+        this.products = products.Data;
+    }
+
+    async Task ExportExcel()
+    {
+        await jsRuntime.InvokeAsync<object>("downloadExcel", "/api/products/export/excel", "products");
+    }
+
+    async Task ExportCSV()
+    {
+        await jsRuntime.InvokeAsync<object>("downloadCSV", "/api/products/export/csv", "products");
+    }
+
+    // MudBlazor
+    private string _searchString;
+    private List<string> _events = new();
+    private bool _sortNameByLength;
+
+    // custom sort by name length
+    private Func<Product, object> _sortBy => x =>
+    {
+        if (_sortNameByLength)
+            return x.Name.Length;
+        else
+            return x.Name;
+    };
+
+    // quick filter - filter gobally across multiple columns with the same input
+    private Func<Product, bool> _quickFilter => x =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.Description.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.Price.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // search if data type array
+        List<string> categoriesList = new List<string>();
+        foreach (var item in x.Categories)
+        {
+            categoriesList.Add(item.Name);
+        }
+
+        if (string.Join(" ", categoriesList.ToArray()).Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    };
+
+    private Color generateColorChip(string name)
+    {
+        if (name == "Food")
+        {
+            return Color.Info;
+        }
+        else if (name == "Drink")
+        {
+            return Color.Success;
+        }
+        else
+        {
+            return Color.Secondary;
+        }
+    }
+
+    async Task CreateProduct()
+    {
+        DialogOptions options = new DialogOptions()
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true
+            };
+
+        var parameters = new DialogParameters();
+        parameters.Add("Categories", categories);
+
+        var createProductModal = DialogService.Show<DialogAddProduct>("Create Product", parameters, options);
+        var result = await createProductModal.Result;
+
+        if(!result.Cancelled)
+        {
+            if (result.Data.Equals(true))
+            {
+                Snackbar.Add("Product has been created!", Severity.Success);
+                await loadDataProductAsync();
+            }
+        }
+    }
+
+
+    async Task DeleteProduct(int id)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("ContentText", "Do you really want to delete these records? This process cannot be undone.");
+        parameters.Add("ButtonText", "Delete");
+        parameters.Add("Color", Color.Error);
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var deleteProductModal = DialogService.Show<DialogDelete>("Delete", parameters, options);
+        var result = await deleteProductModal.Result;
+
+        if (!result.Cancelled)
+        {
+            var res = await ProductService.DeleteProductAsync(id);
+
+            if (res.Data) {
+                Snackbar.Add("Product has been deleted!", Severity.Success);
+                await loadDataProductAsync();
+            } else {
+                Snackbar.Add("Product failed to delete!", Severity.Error);
+            }
+
+        } else {
+            Console.WriteLine("Cancel");
+        }
+    }
+
+    async Task UpdateProduct(Product product)
+    {
+        DialogOptions options = new DialogOptions()
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true
+            };
+
+        var parameters = new DialogParameters();
+        parameters.Add("Product", product);
+        parameters.Add("Categories", categories);
+        parameters.Add("IsEdit", true);
+        
+
+        var updateProductModal = DialogService.Show<DialogUpdateProduct>("Update Product", parameters, options);
+        var result = await updateProductModal.Result;
+
+        if(!result.Cancelled)
+        {
+            if (result.Data.Equals(true))
+            {
+                Snackbar.Add("Product has been updated!", Severity.Success);
+                await loadDataProductAsync();
+            }
+        }
+    }
+}

@@ -1,0 +1,144 @@
+﻿@using System.Net.Http.Headers
+@using System.IO;
+@using FoodShop.Client.ViewModel
+@using Tewr.Blazor.FileReader;
+
+@inject IFileReaderService fileReader;
+@inject IProductService ProductService
+@inject ICategoryService CategoryService
+@inject HttpClient Http
+@inject IModalService Modal
+
+<div style="width: 400px; max-height: 80vh; overflow: scroll">
+    <EditForm Model="product" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <div class="d-flex flex-column gap-2">
+            <div>
+                <label for="name">Name</label>
+                <InputText id="name" @bind-Value="product.Name" class="form-control"></InputText>
+                <ValidationMessage For="@(() => product.Name)" />
+            </div>
+            <div>
+                <label for="description">Description</label>
+                <InputText id="description" @bind-Value="product.Description" class="form-control"></InputText>
+                <ValidationMessage For="@(() => product.Description)" />
+            </div>
+
+            <div>
+                <label for="categoryId">Category</label>
+                <select class="form-select" multiple aria-label="multiple select example" @bind="product.categorySelected">
+                    <option selected>Open this select menu</option>
+                    @if (categories != null)
+                    {
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    }
+                </select>
+                <ValidationMessage For="@(() => product.categorySelected)" />
+            </div>
+            <div>
+                <label for="price">Price</label>
+                <InputNumber id="price" @bind-Value="product.Price" class="form-control"></InputNumber>
+                <ValidationMessage For="@(() => product.Price)" />
+            </div>
+            @if (product.Image != "" || product.Image != null)
+            {
+                <div>
+                    <img src="@product.Image" class="rounded" style="max-height: 100px" />
+                </div>
+            }
+
+            <div>
+                <label for="image">Image</label>
+                <input type="file" @onchange="async () => await OnFileChange()" class="form-control" @ref="elementReference" />
+                <ValidationMessage For="@(() => product.Image)" />
+            </div>
+            <br />
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary me-2">Create Product</button>
+                <button type="button" @onclick="Cancel" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+        <ValidationSummary />
+    </EditForm>
+</div>
+
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+
+    private List<Category> categories = new List<Category>();
+    private List<Product> products = new List<Product>();
+    ProductCreateVMC product = new ProductCreateVMC();
+
+    string fileName = "";
+    ElementReference elementReference;
+    Stream fileStream = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await CategoryService.GetCategoriesAsync();
+        categories = result.Data;
+
+        var products = await ProductService.GetProductsAsync();
+        this.products = products.Data;
+
+    }
+
+    async Task OnFileChange()
+    {
+        var format = "image/png";
+
+        // GET IMAGE
+        var file = (await fileReader.CreateReference(elementReference).EnumerateFilesAsync()).FirstOrDefault();
+        if (file == null) return;
+
+        // Preview Image
+        // create base64 from variable file
+        var fileStream123 = await file.OpenReadAsync();
+        var buffer = new byte[fileStream123.Length];
+        await fileStream123.ReadAsync(buffer);
+        var imageData = $"data:{format};base64, {Convert.ToBase64String(buffer)}";
+        product.Image = imageData;
+
+
+        var fileInfo = await file.ReadFileInfoAsync();
+        fileName = fileInfo.Name;
+
+        using (var memoryStream = await file.CreateMemoryStreamAsync((int)fileInfo.Size))
+        {
+            fileStream = new MemoryStream(memoryStream.ToArray());
+        }
+
+    }
+
+    async Task HandleSubmit()
+    {
+        var content = new MultipartFormDataContent();
+        content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data");
+
+        content.Add(new StreamContent(fileStream, (int)fileStream.Length), "Image", fileName);
+        content.Add(new StringContent(product.Name), "Name");
+        content.Add(new StringContent(product.Description), "Description");
+        foreach (var item in product.categorySelected)
+        {
+            content.Add(new StringContent(item), "CategoriesId");
+        }
+        content.Add(new StringContent(product.Price.ToString()), "Price");
+
+
+        var response = await Http.PostAsync($"https://localhost:7235/api/products", content);
+        var result = await response.Content.ReadFromJsonAsync<ServiceResponse<Product>>();
+        
+        
+        ModalInstance.CloseAsync(ModalResult.Ok<bool>(result.Success));        
+    }
+
+    void Cancel()
+    {
+        ModalInstance.CancelAsync();
+    }
+}

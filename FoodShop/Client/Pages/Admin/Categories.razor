@@ -1,0 +1,152 @@
+﻿@layout MainLayout
+@page "/admin/categories"
+@attribute [Authorize(Roles = "Admin")]
+@inject ICategoryService categoryService
+@inject IJSRuntime JS
+@inject HttpClient Http
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+
+<div class="d-flex justify-content-between">
+    <h3>Category</h3>
+    <MudButton OnClick="CreateCategory" Variant="Variant.Filled" Color="Color.Primary">Create Category</MudButton>
+</div>
+
+<div style="padding-bottom: 50px"></div>
+
+<MudDataGrid T="Category" MultiSelection="true" Items="@categories" Sortable="true" Filterable="true" QuickFilter="@_quickFilter" Hideable="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Category</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+
+    <Columns>
+        <Column T="Category" Field="Icon" Filterable="false" Sortable="false">
+            <CellTemplate>
+                <img src=@($"{Http.BaseAddress}{context.Item.Icon}") width="80px" />
+            </CellTemplate>
+        </Column>
+        <Column T="Category" Field="Name" SortBy="@_sortBy" />
+        <Column T="Category" Title="Action" Field="Id">
+            <CellTemplate>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="@(() => UpdateCategory(context.Item))" Variant="Variant.Filled" Color="Color.Warning" Class="me-2"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick="@(() => DeleteCategory(context.Item.Id))" Variant="Variant.Filled" Color="Color.Error"></MudIconButton>
+            </CellTemplate>
+        </Column>
+    </Columns>
+</MudDataGrid>
+
+@code {
+    private string _searchString;
+    private bool _sortNameByLength;
+
+    List<Category> categories = new List<Category>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var res = await categoryService.GetCategoriesAsync();
+        categories = res.Data;
+    }
+
+    private async Task loadDataCategoryAsync() {
+        var res = await categoryService.GetCategoriesAsync();
+        categories = res.Data;
+    }
+
+   async Task CreateCategory()
+    {
+        DialogOptions options = new DialogOptions()
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true
+            };
+
+        var parameters = new DialogParameters();
+        parameters.Add("Categories", categories);
+        
+        var createProductModal = DialogService.Show<DialogAddCatagory>("Create Product", parameters, options);
+        var result = await createProductModal.Result;
+
+        if(!result.Cancelled)
+        {
+            if (result.Data.Equals(true))
+            {
+                Snackbar.Add("Product has been created!", Severity.Success);
+                await loadDataCategoryAsync();
+            }
+        }
+    }
+
+    // custom sort by name length
+    private Func<Category, object> _sortBy => x =>
+    {
+        if (_sortNameByLength)
+            return x.Name.Length;
+        else
+            return x.Name;
+    };
+
+    // quick filter - filter gobally across multiple columns with the same input
+    private Func<Category, bool> _quickFilter => x =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    };
+
+    async Task DeleteCategory(int id)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("ContentText", "Do you really want to delete these records? This process cannot be undone.");
+        parameters.Add("ButtonText", "Delete");
+        parameters.Add("Color", Color.Error);
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var deleteProductModal = DialogService.Show<DialogDelete>("Delete", parameters, options);
+        var result = await deleteProductModal.Result;
+
+        if (!result.Cancelled)
+        {
+            var res = await categoryService.DeleteCategoryAsync(id);
+
+            if (res.Data) {
+                Snackbar.Add("category has been deleted!", Severity.Success);
+                await loadDataCategoryAsync();
+            } else {
+                Snackbar.Add("Category failed to delete!", Severity.Error);
+            }
+
+        }
+    }
+
+    async Task UpdateCategory(Category category)
+    {
+        DialogOptions options = new DialogOptions()
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true
+            };
+
+        var parameters = new DialogParameters();
+        parameters.Add("Category", category);
+
+        var updateProductModal = DialogService.Show<DialogUpdateCategory>("Update Category", parameters, options);
+        var result = await updateProductModal.Result;
+
+        if(!result.Cancelled)
+        {
+            if (result.Data.Equals(true))
+            {
+                Snackbar.Add("Category has been updated!", Severity.Success);
+                await loadDataCategoryAsync();
+            }
+        }
+    }
+}

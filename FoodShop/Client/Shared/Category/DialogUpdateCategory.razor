@@ -1,0 +1,138 @@
+﻿@inject IFileReaderService fileReader;
+@inject ISnackbar Snackbar
+@inject ICategoryService CategoryService
+@inject HttpClient Http
+
+<MudDialog>
+    <DialogContent>
+        @if (category.Icon != string.Empty)
+        {
+        <div class="d-flex justify-content-center">
+            <MudImage Src="@category.Icon" Width="200" Height="150" 
+            Alt="Swedish Farm House" Elevation="25" Class="rounded-lg ma-4 m-auto"/>
+        </div>
+        }
+        <EditForm Model="@category" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" sm="12">
+                    <MudCardContent>
+                        <MudTextField Label="Name" 
+                            @bind-Value="category.Name"/>
+                            <ValidationMessage  For="@(() => category.Name)" />
+                            
+                         <input type="file" id="fileInput" @onchange="async () => await UploadFiles()" hidden @ref="elementReference"  />
+                         <MudButton HtmlTag="label"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   StartIcon="@Icons.Filled.CloudUpload"
+                                   for="fileInput"
+                                   Class="mt-5">
+                            Upload Files
+                        </MudButton>
+                        <ValidationMessage For="@(() => category.Icon)" />
+                        
+                        <br />
+                        <div class="d-flex justify-content-end gap-3">
+                            <MudButton OnClick="Cancel">Cancel</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">
+                                 @if (isLoading) {
+                                    <MudProgressCircular Color="Color.Default" Indeterminate="true" Size="Size.Small" />
+                                } else {
+                                    <span>Update</span>
+                                }
+                            </MudButton>
+                        </div>
+                    </MudCardContent>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter] public Category Category { get; set; } = new Category();
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    private CategoryUpdateVMC category = new CategoryUpdateVMC();
+    private bool isIconUpdate = false;
+    private bool isLoading = false;
+
+    ElementReference elementReference;
+    Stream fileStream = null;
+    string fileName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        category.Id = Category.Id;
+        category.Name = Category.Name;
+        category.Icon = Category.Icon;
+    }
+
+    private async Task UploadFiles()
+    {
+        var format = "image/png";
+
+        // GET IMAGE
+        var file = (await fileReader.CreateReference(elementReference).EnumerateFilesAsync()).FirstOrDefault();
+        if (file == null) return;
+
+        // Validation only image
+        var fileInfo = await file.ReadFileInfoAsync();
+        fileName = fileInfo.Name;
+        category.Icon = string.Empty;
+        if (fileInfo.Type == "image/jpeg" || fileInfo.Type == "image/png")
+        {
+            // Preview Image
+            // create base64 from variable file
+            var fileStream123 = await file.OpenReadAsync();
+            var buffer = new byte[fileStream123.Length];
+            await fileStream123.ReadAsync(buffer);
+            var imageData = $"data:{format};base64, {Convert.ToBase64String(buffer)}";
+
+            category.Icon = imageData;
+            isIconUpdate = true;
+
+            using (var memoryStream = await file.CreateMemoryStreamAsync((int)fileInfo.Size))
+            {
+                fileStream = new MemoryStream(memoryStream.ToArray());
+            }
+        } else {
+            Snackbar.Add("Invalid file type, only jpeg/png!", Severity.Error);
+            return;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        isLoading = true;
+
+        var content = new MultipartFormDataContent();
+        content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data");
+
+        if (isIconUpdate)
+        {
+            content.Add(new StreamContent(fileStream, (int)fileStream.Length), "Icon", fileName);
+        }
+
+        content.Add(new StringContent(category.Id.ToString()), "Id");
+        content.Add(new StringContent(category.Name), "Name");
+
+        content.Add(new StringContent(isIconUpdate.ToString()), "IsIconUpdate");
+
+        var result = await CategoryService.UpdateCategoryAsync(content);
+
+        if (result.Success)
+        {
+            MudDialog.Close(DialogResult.Ok<bool>(true));
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error);
+        }
+        
+        isLoading = false;
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}
