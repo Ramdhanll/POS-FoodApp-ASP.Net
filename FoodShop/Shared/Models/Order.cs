@@ -19,13 +19,13 @@ namespace FoodShop.Shared.Models
 
         [Column(TypeName = "decimal(18,2)")]
         public Decimal TotalPrice { get; set; } = 0;
-        public OrderStatus OrderStatus { get; set; } = OrderStatus.ongoing;
+        public EnumOrderStatus OrderStatus { get; set; } = EnumOrderStatus.Ongoing;
     }
 
-    public enum OrderStatus
+    public enum EnumOrderStatus
     {
         [Display(Name = "Ongoing")]
-        ongoing,
+        Ongoing,
         [Display(Name = "Cancelled")]
         Cancelled,
         [Display(Name = "Completed")]

@@ -20,9 +20,9 @@ namespace FoodShop.Server.Controllers
 
         // get all orders
         [HttpGet]
-        public async Task<ActionResult<ServiceResponse<Order>>> GetOrders()
+        public async Task<ActionResult<ServiceResponse<Order>>> GetOrders(string? status)
         {
-            var result = await _orderService.GetOrdersAsync();
+            var result = await _orderService.GetOrdersAsync(status);
 
             if (result.Success)
             {
@@ -72,10 +72,10 @@ namespace FoodShop.Server.Controllers
         }
 
         // update order PUT
-        [HttpPut]
+        [HttpPut("items")]
         public async Task<ActionResult<ServiceResponse<Order>>> UpdateOrder(OrderUpdateVM request)
         {
-            var result = await _orderService.UpdateOrderAsync(request);
+            var result = await _orderService.UpdateOrderItemsAsync(request);
 
             if (result.Success)
             {

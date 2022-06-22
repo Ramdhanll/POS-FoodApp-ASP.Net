@@ -1,4 +1,7 @@
-﻿namespace FoodShop.Server.Services.OrderService
+﻿using FoodShop.Server.Utils;
+using System.Linq;
+
+namespace FoodShop.Server.Services.OrderService
 {
     public class OrderService : IOrderService
     {
@@ -51,20 +54,74 @@
             throw new NotImplementedException();
         }
 
-        public async Task<ServiceResponse<List<Order>>> GetOrdersAsync()
+        public async Task<ServiceResponse<List<OrderResponse>>> GetOrdersAsync(string status = null)
         {
-            var orders = await _context.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).ToListAsync();
-
-            return new ServiceResponse<List<Order>>
+            if (status != null)
             {
-                Success = true,
-                Data = orders,
-                Message = "Orders retrieved"
-            };
+                var statusToLower = status.ToLower();
+                var statusFilter = statusToLower.Substring(0, 1).ToUpper() + statusToLower.Substring(1);
+                EnumOrderStatus orderStatus = EnumOrderStatus.Ongoing;
 
+                try
+                {
+                    orderStatus = (EnumOrderStatus)Enum.Parse(typeof(EnumOrderStatus), statusFilter);
+                }
+                catch (Exception)
+                {
+
+                        return new ServiceResponse<List<OrderResponse>>
+                        {
+                            Success = true,
+                            Data = null,
+                            Message = "Status not found!"
+                        };
+                }
+
+                var orders = await _context.Orders
+                       .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+                       .Where(o => o.OrderStatus == orderStatus)
+                       .Select(o => new OrderResponse
+                       {
+                           Id = o.Id,
+                           CreatedAt = o.CreatedAt,
+                           OrderItems = o.OrderItems,
+                           TotalPrice = o.TotalPrice,
+                           OrderStatus = o.OrderStatus.GetDisplayName()
+                       })
+                       .ToListAsync();
+
+                return new ServiceResponse<List<OrderResponse>>
+                {
+                    Success = true,
+                    Data = orders,
+                    Message = "Orders has been found"
+                };
+            }
+            else
+            {
+                var orders = await _context.Orders
+                    .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+                    .Select(o => new OrderResponse
+                    {
+                        Id = o.Id,
+                        CreatedAt = o.CreatedAt,
+                        OrderItems = o.OrderItems,
+                        TotalPrice = o.TotalPrice,
+                        OrderStatus = o.OrderStatus.GetDisplayName()
+                    })
+                    .ToListAsync();
+
+              
+                return new ServiceResponse<List<OrderResponse>>
+                {
+                    Success = true,
+                    Data = orders,
+                    Message = "Orders has been found"
+                };
+            }
         }
 
-        public async Task<ServiceResponse<Order>> UpdateOrderAsync(OrderUpdateVM request)
+        public async Task<ServiceResponse<Order>> UpdateOrderItemsAsync(OrderUpdateVM request)
         {
             // find order by id
             var order = await _context.Orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).FirstOrDefaultAsync(o => o.Id == request.Id);

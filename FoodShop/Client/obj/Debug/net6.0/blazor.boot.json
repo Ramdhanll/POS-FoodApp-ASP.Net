@@ -204,15 +204,15 @@
       "mscorlib.dll": "sha256-ghlJNtzzYlKIliGPuf0A0Yu6dmLycSx3F9uyeddFb\/g=",
       "netstandard.dll": "sha256-qpOz\/RBwhlIYfaE2GDEmjiproxkvSf2b9GeqHxvH+lg=",
       "System.Private.CoreLib.dll": "sha256-sfzSZ3YKC2rpF77TVOKLuPgQag93QXr9U4AUc9d\/LKA=",
-      "FoodShop.Shared.dll": "sha256-JpLCJUXwsA6kpiPEdn5d3sQ\/Aw8Tsh\/yclZWm8QYwKY=",
-      "FoodShop.Client.dll": "sha256-dDe5rSYe6vr1Kd6\/w4Yq2uaaMXQAMJZdXJXkJXi4NXo="
+      "FoodShop.Shared.dll": "sha256-HKU3ZN2JUqBYuOlJ5OGRI9x7tsgKBAG5Vz\/WboQmDAE=",
+      "FoodShop.Client.dll": "sha256-3w9lSfb7Carci1i1cBXK7bNMrD4slIjBzZkL+oVN8bE="
     },
     "extensions": null,
     "lazyAssembly": null,
     "libraryInitializers": null,
     "pdb": {
-      "FoodShop.Shared.pdb": "sha256-D+t0noQmO\/5inQWKjxGUYO6MfANAF7R1441lUES+mRc=",
-      "FoodShop.Client.pdb": "sha256-E3QUgHHieDb\/ekd+zkgDXKsk8cymaDXwpxwvnWxf1sU="
+      "FoodShop.Shared.pdb": "sha256-rAhSffpGCMQdSn5hRRs+KEvW7n9iNG1C0DG1Ng3J2x0=",
+      "FoodShop.Client.pdb": "sha256-RvXDO3bQKzU6llFUXT\/fQE9nsq\/WPpdHOkfJZJlvVlE="
     },
     "runtime": {
       "dotnet.6.0.5.1upi4fuddb.js": "sha256-783uOt0jgblQfP6Yz5TJeuW2xxtl6UHZQPngZtCz79U=",

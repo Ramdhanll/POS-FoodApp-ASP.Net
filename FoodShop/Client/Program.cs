@@ -6,6 +6,10 @@ global using FoodShop.Shared.Response;
 global using FoodShop.Client.Services.ProductService;
 global using FoodShop.Client.Services.CategoryService;
 global using FoodShop.Client.Services.AuthService;
+global using FoodShop.Client.Services.OrderService;
+global using FoodShop.Client.Shared.Order;
+
+
 global using System.Net.Http.Json;
 global using Tewr.Blazor.FileReader;
 global using FoodShop.Client.Services;
@@ -35,8 +39,11 @@ builder.Services.AddBlazoredModal();
 
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+
+
 builder.Services.AddScoped<FileService>();
 
 // MudBlazor

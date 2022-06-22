@@ -1,0 +1,155 @@
+﻿@layout MainLayout
+@page "/admin/orders"
+
+@inject IOrderService OrderService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="d-flex justify-content-between">
+    <h3>Order</h3>
+    <MudButton OnClick="CreateOrder" Variant="Variant.Filled" Color="Color.Primary">Create Order</MudButton>
+</div>
+
+<div style="padding-bottom: 50px"></div>
+
+<div class="d-flex gap-2 justify-content-start">
+    <button @onclick="ExportExcel" class="btn btn-outline-info">Export Excel</button>
+</div>
+
+<div style="padding-bottom: 30px"></div>
+
+<MudDataGrid T="OrderResponse" MultiSelection="true" Items="@orders" Sortable="true" Filterable="true" QuickFilter="@_quickFilter" Hideable="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Order</MudText>
+        <MudSpacer />
+        <MudTextField  @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+    </ToolBarContent>
+    <Columns>
+        <Column T="OrderResponse" Field="Id" SortBy="@_sortBy" />
+        <Column T="OrderResponse" Field="OrderStatus" Title="Status" SortBy="@_sortBy" />
+        <Column T="OrderResponse" Field="TotalPrice" Title="Total Price" SortBy="@_sortBy" />
+        <Column T="OrderResponse" Field="CreatedAt" Title="Created At" SortBy="@_sortBy" />
+        <Column T="OrderResponse" Title="Action" Field="Id">
+            <CellTemplate>
+                @*<MudIconButton Icon="@Icons.Material.Filled.Edit" @onclick="@(() => UpdateOrder(context.Item))" Variant="Variant.Filled" Color="Color.Warning" Class="me-2"></MudIconButton>*@
+                <MudIconButton Icon="@Icons.Material.Filled.Details" @onclick="@(() => DetailOrder(context.Item))" Variant="Variant.Filled" Color="Color.Primary"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick="@(() => DeleteOrder(context.Item.Id))" Variant="Variant.Filled" Color="Color.Error"></MudIconButton>
+            </CellTemplate>
+        </Column>
+    </Columns>
+</MudDataGrid>
+
+
+@code {
+    private List<OrderResponse> orders = new List<OrderResponse>();
+
+    private async Task LoadDataOrders() {
+        var result = await OrderService.GetOrdersAsync();
+        orders = result.Data;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataOrders();
+    }
+
+    private async Task CreateOrder()
+    {
+        var result = await OrderService.CreateOrderAsync();
+
+        if (result.Success)
+        {
+            Snackbar.Add("Order has been created!", Severity.Success);
+            await LoadDataOrders();
+        } else
+        {
+            Snackbar.Add("Create Order failed!", Severity.Error);
+        }
+    }
+
+    private async Task ExportExcel() {
+
+    }
+
+    private async Task UpdateOrder(Order order)
+    {
+
+    }
+
+    private async Task DetailOrder(OrderResponse order)
+    {
+        DialogOptions options = new DialogOptions()
+            {
+                MaxWidth = MaxWidth.ExtraSmall,
+                FullWidth = true
+            };
+
+        var parameters = new DialogParameters();
+        parameters.Add("order", order);
+
+        DialogService.Show<DialogDetailOrder>($"Detail Order", parameters, options);
+    }
+
+    private async Task DeleteOrder(string id)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("ContentText", "Do you really want to delete these records? This process cannot be undone.");
+        parameters.Add("ButtonText", "Delete");
+        parameters.Add("Color", Color.Error);
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        
+        var deleteProductModal = DialogService.Show<DialogDelete>("Delete", parameters, options);
+        var result = await deleteProductModal.Result;
+        
+         if (!result.Cancelled)
+        {
+            var res = await OrderService.DeleteOrderAsync(id);
+
+            if (res.Data) {
+                Snackbar.Add("Product has been deleted!", Severity.Success);
+                await LoadDataOrders();
+            } else {
+                Snackbar.Add("Product failed to delete!", Severity.Error);
+            }
+
+        }
+    }
+
+    // MudBlazor
+    private string _searchString;
+    private List<string> _events = new();
+    private bool _sortNameByLength;
+
+     // custom sort by name length
+    private Func<OrderResponse, object> _sortBy => x =>
+    {
+        if (_sortNameByLength)
+            return x.Id.Length;
+        else
+            return x.Id;
+    };
+
+    // quick filter - filter gobally across multiple columns with the same input
+    private Func<OrderResponse, bool> _quickFilter => x =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+            
+        if (x.Id.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.OrderStatus.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.CreatedAt.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+
+        return false;
+    };
+}

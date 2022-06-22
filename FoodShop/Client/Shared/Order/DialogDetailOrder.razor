@@ -1,0 +1,18 @@
+﻿@inject IJSRuntime JS
+
+<MudDialog>
+    <DialogContent>
+        <h3>ANJAY</h3>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter] public OrderResponse order { get; set; }
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        JS.InvokeVoidAsync("console.log", order);
+    }
+}

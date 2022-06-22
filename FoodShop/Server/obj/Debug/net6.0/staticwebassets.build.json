@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "WFT2bYHfhUYTy/Z2n0w4ks3k+Abny7HBZTeKudUhTEI=",
+  "Hash": "L3MWZlNd9eB08jw6l71xQeyTIFAELwc8MueUKQWBMcg=",
   "Source": "FoodShop.Server",
   "BasePath": "_content/FoodShop.Server",
   "Mode": "Default",
@@ -7820,6 +7820,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\34a2c104-d556-4200-b2dd-7fd9505d9bd9_burger2222.jpg"
+    },
+    {
+      "Identity": "C:\\Ramadhani\\Development\\Website\\FoodShop\\FoodShop\\Server\\wwwroot\\images\\3537c148-23c6-4eb2-9b5e-8b94141156c4_Picture1.jpg",
+      "SourceId": "FoodShop.Server",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Ramadhani\\Development\\Website\\FoodShop\\FoodShop\\Server\\wwwroot\\",
+      "BasePath": "_content/FoodShop.Server",
+      "RelativePath": "images/3537c148-23c6-4eb2-9b5e-8b94141156c4_Picture1.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\3537c148-23c6-4eb2-9b5e-8b94141156c4_Picture1.jpg"
     },
     {
       "Identity": "C:\\Ramadhani\\Development\\Website\\FoodShop\\FoodShop\\Server\\wwwroot\\images\\3b706eb9-6d38-4090-b48f-a76d2b970edd_WhatsApp Image 2022-06-01 at 9.13.20 AM.jpeg",
